@@ -1,248 +1,78 @@
-import smbus
-import time
- 
-import RPi.GPIO as gpio
- 
-PWR_M   = 0x6B
-DIV   = 0x19
+import smbus			#import SMBus module of I2C
+from time import sleep          #import
+
+#some MPU6050 Registers and their Address
+PWR_MGMT_1   = 0x6B
+SMPLRT_DIV   = 0x19
 CONFIG       = 0x1A
 GYRO_CONFIG  = 0x1B
-INT_EN   = 0x38
-ACCEL_X = 0x3B
-ACCEL_Y = 0x3D
-ACCEL_Z = 0x3F
-GYRO_X  = 0x43
-GYRO_Y  = 0x45
-GYRO_Z  = 0x47
-TEMP = 0x41
-bus = smbus.SMBus(1)
-Device_Address = 0x68   # device address
- 
-AxCal=0
-AyCal=0
-AzCal=0
-GxCal=0
-GyCal=0
-GzCal=0
- 
- 
-RS =18
-EN =23
-D4 =24
-D5 =25
-D6 =8
-D7 =7
- 
-gpio.setwarnings(False)
-gpio.setmode(gpio.BCM)
-gpio.setup(RS, gpio.OUT)
-gpio.setup(EN, gpio.OUT)
-gpio.setup(D4, gpio.OUT)
-gpio.setup(D5, gpio.OUT)
-gpio.setup(D6, gpio.OUT)
-gpio.setup(D7, gpio.OUT)
- 
- 
-def begin():
-  cmd(0x33) 
-  cmd(0x32) 
-  cmd(0x06)
-  cmd(0x0C) 
-  cmd(0x28) 
-  cmd(0x01) 
-  time.sleep(0.0005)
- 
-def cmd(ch): 
-  gpio.output(RS, 0)
-  gpio.output(D4, 0)
-  gpio.output(D5, 0)
-  gpio.output(D6, 0)
-  gpio.output(D7, 0)
-  if ch&0x10==0x10:
-    gpio.output(D4, 1)
-  if ch&0x20==0x20:
-    gpio.output(D5, 1)
-  if ch&0x40==0x40:
-    gpio.output(D6, 1)
-  if ch&0x80==0x80:
-    gpio.output(D7, 1)
-  gpio.output(EN, 1)
-  time.sleep(0.005)
-  gpio.output(EN, 0)
-  # Low bits
-  gpio.output(D4, 0)
-  gpio.output(D5, 0)
-  gpio.output(D6, 0)
-  gpio.output(D7, 0)
-  if ch&0x01==0x01:
-    gpio.output(D4, 1)
-  if ch&0x02==0x02:
-    gpio.output(D5, 1)
-  if ch&0x04==0x04:
-    gpio.output(D6, 1)
-  if ch&0x08==0x08:
-    gpio.output(D7, 1)
-  gpio.output(EN, 1)
-  time.sleep(0.005)
-  gpio.output(EN, 0)
-  
-def write(ch): 
-  gpio.output(RS, 1)
-  gpio.output(D4, 0)
-  gpio.output(D5, 0)
-  gpio.output(D6, 0)
-  gpio.output(D7, 0)
-  if ch&0x10==0x10:
-    gpio.output(D4, 1)
-  if ch&0x20==0x20:
-    gpio.output(D5, 1)
-  if ch&0x40==0x40:
-    gpio.output(D6, 1)
-  if ch&0x80==0x80:
-    gpio.output(D7, 1)
-  gpio.output(EN, 1)
-  time.sleep(0.005)
-  gpio.output(EN, 0)
-  # Low bits
-  gpio.output(D4, 0)
-  gpio.output(D5, 0)
-  gpio.output(D6, 0)
-  gpio.output(D7, 0)
-  if ch&0x01==0x01:
-    gpio.output(D4, 1)
-  if ch&0x02==0x02:
-    gpio.output(D5, 1)
-  if ch&0x04==0x04:
-    gpio.output(D6, 1)
-  if ch&0x08==0x08:
-    gpio.output(D7, 1)
-  gpio.output(EN, 1)
-  time.sleep(0.005)
-  gpio.output(EN, 0)
-def clear():
-  cmd(0x01)
- 
-def Print(Str):
-  print(str)
+INT_ENABLE   = 0x38
+ACCEL_XOUT_H = 0x3B
+ACCEL_YOUT_H = 0x3D
+ACCEL_ZOUT_H = 0x3F
+GYRO_XOUT_H  = 0x43
+GYRO_YOUT_H  = 0x45
+GYRO_ZOUT_H  = 0x47
+
+
+def MPU_Init():
+	#write to sample rate register
+	bus.write_byte_data(Device_Address, SMPLRT_DIV, 7)
+	
+	#Write to power management register
+	bus.write_byte_data(Device_Address, PWR_MGMT_1, 1)
+	
+	#Write to Configuration register
+	bus.write_byte_data(Device_Address, CONFIG, 0)
+	
+	#Write to Gyro configuration register
+	bus.write_byte_data(Device_Address, GYRO_CONFIG, 24)
+	
+	#Write to interrupt enable register
+	bus.write_byte_data(Device_Address, INT_ENABLE, 1)
+
+def read_raw_data(addr):
+	#Accelero and Gyro value are 16-bit
+        high = bus.read_byte_data(Device_Address, addr)
+        low = bus.read_byte_data(Device_Address, addr+1)
     
-def setCursor(x,y):
-        if y == 0:
-                n=128+x
-        elif y == 1:
-                n=192+x
-        cmd(n)
- 
- 
-def InitMPU():
-bus.write_byte_data(Device_Address, DIV, 7)
-bus.write_byte_data(Device_Address, PWR_M, 1)
-bus.write_byte_data(Device_Address, CONFIG, 0)
-bus.write_byte_data(Device_Address, GYRO_CONFIG, 24)
-bus.write_byte_data(Device_Address, INT_EN, 1)
-time.sleep(1)
- 
-def display(x,y,z):
-      x=x*100
-      y=y*100
-      z=z*100
-      x= "%d" %x
-      y= "%d" %y
-      z= "%d" %z
-      setCursor(0,0)
-      Print("X     Y     Z")
-      setCursor(0,1)
-      Print(str(x))
-      Print("   ")
-      setCursor(6,1)
-      Print(str(y))
-      Print("   ")
-      setCursor(12,1)
-      Print(str(z))
-      Print("   ")
- 
-      print x
-      print y
-      print z
- 
- 
-def readMPU(addr):
-high = bus.read_byte_data(Device_Address, addr)
-low = bus.read_byte_data(Device_Address, addr+1)
-value = ((high << 8) | low)
-if(value > 32768):
-value = value - 65536
-return value
- 
-def gyro():
-      global GxCal
-      global GyCal
-      global GzCal
-      x = readMPU(GYRO_X)
-      y = readMPU(GYRO_Y)
-      z = readMPU(GYRO_Z)
-      Gx = x/131.0 - GxCal
-      Gy = y/131.0 - GyCal
-      Gz = z/131.0 - GzCal
-      #print "X="+str(Gx)
-      display(Gx,Gy,Gz)
-      time.sleep(.01)
- 
-def calibrate():
-  clear()
-  Print("Calibrate....")
-  global AxCal
-  global AyCal
-  global AzCal
-  x=0
-  y=0
-  z=0
-  for i in range(50):
-      x = x + readMPU(ACCEL_X)
-      y = y + readMPU(ACCEL_Y)
-      z = z + readMPU(ACCEL_Z)
-  x= x/50
-  y= y/50
-  z= z/50
-  AxCal = x/16384.0
-  AyCal = y/16384.0
-  AzCal = z/16384.0
-  
-  print AxCal
-  print AyCal
-  print AzCal
- 
-  global GxCal
-  global GyCal
-  global GzCal
-  x=0
-  y=0
-  z=0
-  for i in range(50):
-    x = x + readMPU(GYRO_X)
-    y = y + readMPU(GYRO_Y)
-    z = z + readMPU(GYRO_Z)
-  x= x/50
-  y= y/50
-  z= z/50
-  GxCal = x/131.0
-  GyCal = y/131.0
-  GzCal = z/131.0
- 
-  print GxCal
-  print GyCal
-  print GzCal
- 
- 
-begin();
-Print("MPU6050 Interface")
-setCursor(0,1)
-Print("Circuit Digest")
-time.sleep(2)
-InitMPU()
-calibrate()
-while 1:
-  InitMPU()
-  Print("Gyro")
-  time.sleep(1)
-  for i in range(30):
-    gyro()
+        #concatenate higher and lower value
+        value = ((high << 8) | low)
+        
+        #to get signed value from mpu6050
+        if(value > 32768):
+                value = value - 65536
+        return value
+
+
+bus = smbus.SMBus(1) 	# or bus = smbus.SMBus(0) for older version boards
+Device_Address = 0x68   # MPU6050 device address
+
+MPU_Init()
+
+print (" Reading Data of Gyroscope and Accelerometer")
+
+while True:
+	
+	#Read Accelerometer raw value
+	acc_x = read_raw_data(ACCEL_XOUT_H)
+	acc_y = read_raw_data(ACCEL_YOUT_H)
+	acc_z = read_raw_data(ACCEL_ZOUT_H)
+	
+	#Read Gyroscope raw value
+	gyro_x = read_raw_data(GYRO_XOUT_H)
+	gyro_y = read_raw_data(GYRO_YOUT_H)
+	gyro_z = read_raw_data(GYRO_ZOUT_H)
+	
+	#Full scale range +/- 250 degree/C as per sensitivity scale factor
+	Ax = acc_x/16384.0
+	Ay = acc_y/16384.0
+	Az = acc_z/16384.0
+	
+	Gx = gyro_x/131.0
+	Gy = gyro_y/131.0
+	Gz = gyro_z/131.0
+	
+
+	print ("Gx=%.2f" %Gx, u'\u00b0'+ "/s", "\tGy=%.2f" %Gy, u'\u00b0'+ "/s", "\tGz=%.2f" %Gz, u'\u00b0'+ "/s", "\tAx=%.2f g" %Ax, "\tAy=%.2f g" %Ay, "\tAz=%.2f g" %Az) 	
+	sleep(1)

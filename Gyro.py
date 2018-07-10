@@ -20,16 +20,14 @@ GYRO_ZOUT_H  = 0x47
 def calculate_angle(x, y, z):
    return degrees(atan(x / sqrt(pow(y,2) + pow(z,2))))
 
-firstime = True
 
-def send_sms(text):	
+def send_sms(text, firstime):	
 	account_sid = 'AC5a212b36e7e30bfd3556e5387e875c36'
 	auth_token = 'd2bbb88bb40f3bbf908ef2819cc81de2'
 	client = Client(account_sid, auth_token)
 
 	if(firstime):
 		message = client.messages.create(body=text, from_='+17027665831', to='+359877768626')
-		firstime = False
 	
 	print(text)
 
@@ -85,6 +83,8 @@ Zp = float(sys.argv[3])
 sleep(10)
 #wait to setup the initial package position
 
+firstime = True
+
 while True:
 	
 	#Read Accelerometer raw value
@@ -118,18 +118,23 @@ while True:
 		init = False
 
 	if(fabs(Xt - Xi) > fabs(Xp)):
-		send_sms("X axis exceed the limit with value: %.2f" %fabs(Xt - Xi))
+		send_sms("X axis exceed the limit with value: %.2f" %fabs(Xt - Xi), firstime)
+		firstime = False
 	if(fabs(Xt + Xi) > fabs(Xp)):
-		send_sms("X axis exceed the limit with value: %.2f" %fabs(Xt + Xi))
+		send_sms("X axis exceed the limit with value: %.2f" %fabs(Xt + Xi), firstime)
+		firstime = False
 
 	if(fabs(Yt - Yi) > fabs(Yp)):
-		send_sms("Y axis exceed the limit with value: %.2f" %fabs(Yt - Yi))
+		send_sms("Y axis exceed the limit with value: %.2f" %fabs(Yt - Yi), firstime)
+		firstime = False
 	if(fabs(Yt + Yi) > fabs(Yp)):
-		send_sms("Y axis exceed the limit with value: %.2f" %fabs(Yt + Yi))
+		send_sms("Y axis exceed the limit with value: %.2f" %fabs(Yt + Yi), firstime)
+		firstime = False
 
 	if(fabs(Zt - Zi) > fabs(Zp)):
-		send_sms("Z axis exceed the limit with value: %.2f" %fabs(Zt - Zi))
+		send_sms("Z axis exceed the limit with value: %.2f" %fabs(Zt - Zi), firstime)
+		firstime = False
 	if(fabs(Zt + Zi) > fabs(Zp)):
-		send_sms("Z axis exceed the limit with value: %.2f" %fabs(Zt + Zi))
-	
+		send_sms("Z axis exceed the limit with value: %.2f" %fabs(Zt + Zi), firstime)
+		firstime = False
 	sleep(1)

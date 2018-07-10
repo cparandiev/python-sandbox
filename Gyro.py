@@ -1,7 +1,7 @@
 import smbus			#import SMBus module of I2C
 import sys
 from time import sleep          #import
-from math import atan, sqrt, pow, degrees, fmod
+from math import atan, sqrt, pow, degrees, fabs
 
 #some MPU6050 Registers and their Address
 PWR_MGMT_1   = 0x6B
@@ -65,12 +65,12 @@ Yi = 0
 Zi = 0
 #initial package position 
 
-Xp = sys.argv[0]
-Yp = sys.argv[1]
-Zp = sys.argv[2]
+Xp = float(sys.argv[1])
+Yp = float(sys.argv[2])
+Zp = float(sys.argv[3])
 #package pattern position
 
-sleep(10)
+sleep(1)
 
 while True:
 	
@@ -99,15 +99,15 @@ while True:
 	#real time package position
 
 	if(init):
-		Xt = Xd
-		Yt = Yd
-		Zt = Zd
+		Xi = Xt
+		Yi = Yt
+		Zi = Zt
 		init = False
 
-	if(fmod(Xt - Xi) > fmod(Xp))
-		send_sms("X axis exceed the limit with value: %.2f" %fmod(Xt - Xi))
-	if(fmod(Xt + Xi) > fmod(Xp))
-		send_sms("X axis exceed the limit with value: %.2f" %fmod(Xt + Xi))
+	if(fabs(Xt - Xi) > fabs(Xp)):
+		send_sms("X axis exceed the limit with value: %.2f" %fabs(Xt - Xi))
+	if(fabs(Xt + Xi) > fabs(Xp)):
+		send_sms("X axis exceed the limit with value: %.2f" %fabs(Xt + Xi))
 
 	#print("1=%.2f" %calculate_angle(Gx, Gy, Gz), "2=%.2f" %calculate_angle(Gy, Gx, Gz), "3=%.2f" %calculate_angle(Gz, Gy, Gx))
 

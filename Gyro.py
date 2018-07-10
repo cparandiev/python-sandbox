@@ -1,6 +1,7 @@
 import smbus			#import SMBus module of I2C
 import sys
-from time import sleep          #import
+from twilio.rest import Client
+from time import sleep          
 from math import atan, sqrt, pow, degrees, fabs
 
 #some MPU6050 Registers and their Address
@@ -19,8 +20,19 @@ GYRO_ZOUT_H  = 0x47
 def calculate_angle(x, y, z):
    return degrees(atan(x / sqrt(pow(y,2) + pow(z,2))))
 
-def send_sms(text):
-   print(text)
+firstime = True
+
+def send_sms(text):	
+	account_sid = 'AC5a212b36e7e30bfd3556e5387e875c36'
+	auth_token = 'd2bbb88bb40f3bbf908ef2819cc81de2'
+	client = Client(account_sid, auth_token)
+
+	if(firstime):
+		message = client.messages.create(body=text, from_='+17027665831', to='+359877768626')
+		firstime = False
+	
+	print(text)
+
 
 def MPU_Init():
 	#write to sample rate register
@@ -70,7 +82,8 @@ Yp = float(sys.argv[2])
 Zp = float(sys.argv[3])
 #package pattern position
 
-sleep(1)
+sleep(10)
+#wait to setup the initial package position
 
 while True:
 	
@@ -109,7 +122,14 @@ while True:
 	if(fabs(Xt + Xi) > fabs(Xp)):
 		send_sms("X axis exceed the limit with value: %.2f" %fabs(Xt + Xi))
 
-	#print("1=%.2f" %calculate_angle(Gx, Gy, Gz), "2=%.2f" %calculate_angle(Gy, Gx, Gz), "3=%.2f" %calculate_angle(Gz, Gy, Gx))
+	if(fabs(Yt - Yi) > fabs(Yp)):
+		send_sms("Y axis exceed the limit with value: %.2f" %fabs(Yt - Yi))
+	if(fabs(Yt + Yi) > fabs(Yp)):
+		send_sms("Y axis exceed the limit with value: %.2f" %fabs(Yt + Yi))
 
-	# print ("Gx=%.2f" %Gx, u'\u00b0'+ "/s", "\tGy=%.2f" %Gy, u'\u00b0'+ "/s", "\tGz=%.2f" %Gz, u'\u00b0'+ "/s", "\tAx=%.2f g" %Ax, "\tAy=%.2f g" %Ay, "\tAz=%.2f g" %Az) 	
+	if(fabs(Zt - Zi) > fabs(Zp)):
+		send_sms("Z axis exceed the limit with value: %.2f" %fabs(Zt - Zi))
+	if(fabs(Zt + Zi) > fabs(Zp)):
+		send_sms("Z axis exceed the limit with value: %.2f" %fabs(Zt + Zi))
+	
 	sleep(1)

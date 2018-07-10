@@ -1,6 +1,7 @@
 import smbus			#import SMBus module of I2C
+import sys
 from time import sleep          #import
-from math import atan, sqrt, pow, degrees
+from math import atan, sqrt, pow, degrees, fmod
 
 #some MPU6050 Registers and their Address
 PWR_MGMT_1   = 0x6B
@@ -18,6 +19,8 @@ GYRO_ZOUT_H  = 0x47
 def calculate_angle(x, y, z):
    return degrees(atan(x / sqrt(pow(y,2) + pow(z,2))))
 
+def send_sms(text):
+   print(text)
 
 def MPU_Init():
 	#write to sample rate register
@@ -56,6 +59,19 @@ MPU_Init()
 
 print (" Reading Data of Gyroscope and Accelerometer")
 
+init = True
+Xi = 0
+Yi = 0
+Zi = 0
+#initial package position 
+
+Xp = sys.argv[0]
+Yp = sys.argv[1]
+Zp = sys.argv[2]
+#package pattern position
+
+sleep(10)
+
 while True:
 	
 	#Read Accelerometer raw value
@@ -77,9 +93,23 @@ while True:
 	Gy = gyro_y/131.0
 	Gz = gyro_z/131.0
 	
-	print("1=%.2f" %calculate_angle(Gx, Gy, Gz), 
-		  "2=%.2f" %calculate_angle(Gy, Gx, Gz),
-		  "3=%.2f" %calculate_angle(Gz, Gy, Gx))
+	Xt = calculate_angle(Ax, Ay, Az)
+	Yt = calculate_angle(Ay, Ax, Az)
+	Zt = calculate_angle(Az, Ay, Ax)
+	#real time package position
+
+	if(init):
+		Xt = Xd
+		Yt = Yd
+		Zt = Zd
+		init = False
+
+	if(fmod(Xt - Xi) > fmod(Xp))
+		send_sms("X axis exceed the limit with value: %.2f" %fmod(Xt - Xi))
+	if(fmod(Xt + Xi) > fmod(Xp))
+		send_sms("X axis exceed the limit with value: %.2f" %fmod(Xt + Xi))
+
+	#print("1=%.2f" %calculate_angle(Gx, Gy, Gz), "2=%.2f" %calculate_angle(Gy, Gx, Gz), "3=%.2f" %calculate_angle(Gz, Gy, Gx))
 
 	# print ("Gx=%.2f" %Gx, u'\u00b0'+ "/s", "\tGy=%.2f" %Gy, u'\u00b0'+ "/s", "\tGz=%.2f" %Gz, u'\u00b0'+ "/s", "\tAx=%.2f g" %Ax, "\tAy=%.2f g" %Ay, "\tAz=%.2f g" %Az) 	
 	sleep(1)

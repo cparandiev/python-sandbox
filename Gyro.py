@@ -1,5 +1,6 @@
 import smbus			#import SMBus module of I2C
 from time import sleep          #import
+from math import atan, sqrt, pow, degrees
 
 #some MPU6050 Registers and their Address
 PWR_MGMT_1   = 0x6B
@@ -13,6 +14,9 @@ ACCEL_ZOUT_H = 0x3F
 GYRO_XOUT_H  = 0x43
 GYRO_YOUT_H  = 0x45
 GYRO_ZOUT_H  = 0x47
+
+def calculate_angle(x, y, z):
+   return degrees(atan(x / sqrt(pow(y,2) + pow(z,2))))
 
 
 def MPU_Init():
@@ -73,6 +77,6 @@ while True:
 	Gy = gyro_y/131.0
 	Gz = gyro_z/131.0
 	
-
-	print ("Gx=%.2f" %Gx, u'\u00b0'+ "/s", "\tGy=%.2f" %Gy, u'\u00b0'+ "/s", "\tGz=%.2f" %Gz, u'\u00b0'+ "/s", "\tAx=%.2f g" %Ax, "\tAy=%.2f g" %Ay, "\tAz=%.2f g" %Az) 	
+	print(calculate_angle(Gx, Gy, Gz))
+	# print ("Gx=%.2f" %Gx, u'\u00b0'+ "/s", "\tGy=%.2f" %Gy, u'\u00b0'+ "/s", "\tGz=%.2f" %Gz, u'\u00b0'+ "/s", "\tAx=%.2f g" %Ax, "\tAy=%.2f g" %Ay, "\tAz=%.2f g" %Az) 	
 	sleep(1)

@@ -4,6 +4,54 @@ from twilio.rest import Client
 from time import sleep          
 from math import atan, sqrt, pow, degrees, fabs
 
+
+#GPS definition
+class GpsData:
+  def __init__(self, date, latitude, longitude, speed, heading):
+    self.date = date
+    self.latitude = latitude
+    self.longitude = longitude
+    self.speed = speed
+    self.heading = heading
+
+class Counter:
+    def __init__(self, value):
+        self.value = value
+
+c = Counter(-1)
+
+gpsDataArray = [
+    GpsData("1/4/2005 4:24:14 PM", 46.81006, -92.08174, 18, "SW"),
+    GpsData("1/4/2005 4:24:15 PM", 46.81007, -92.08175, 18, "SW"),
+    GpsData("1/4/2005 4:24:16 PM", 46.81009, -92.08176, 19, "SW"),
+    GpsData("1/4/2005 4:24:17 PM", 46.81011, -92.08177, 18, "SW"),
+    GpsData("1/4/2005 4:24:18 PM", 46.81012, -92.08178, 20, "SW"),
+    GpsData("1/4/2005 4:24:19 PM", 46.81016, -92.08179, 18, "SW"),
+    GpsData("1/4/2005 4:24:20 PM", 46.81019, -92.08180, 19, "SW"),
+    GpsData("1/4/2005 4:24:21 PM", 46.81026, -92.08181, 18, "SW"),
+    GpsData("1/4/2005 4:24:22 PM", 46.81027, -92.08182, 18, "SW"),
+    GpsData("1/4/2005 4:24:23 PM", 46.81029, -92.08183, 18, "SW"),
+    GpsData("1/4/2005 4:24:24 PM", 46.81031, -92.08184, 18, "SW"),
+    GpsData("1/4/2005 4:24:25 PM", 46.81033, -92.08185, 21, "SW"),
+    GpsData("1/4/2005 4:24:26 PM", 46.81036, -92.08186, 18, "SW"),
+    GpsData("1/4/2005 4:24:27 PM", 46.81040, -92.08187, 18, "SW"),
+    GpsData("1/4/2005 4:24:28 PM", 46.81045, -92.08188, 21, "SW"),
+    GpsData("1/4/2005 4:24:29 PM", 46.81057, -92.08189, 18, "SW"),
+    GpsData("1/4/2005 4:24:30 PM", 46.81058, -92.08190, 18, "SW"),
+    GpsData("1/4/2005 4:24:31 PM", 46.81059, -92.08191, 18, "SW"),
+    GpsData("1/4/2005 4:24:32 PM", 46.81060, -92.08192, 18, "SW"),
+    GpsData("1/4/2005 4:24:33 PM", 46.81061, -92.08193, 18, "SW"),
+    GpsData("1/4/2005 4:24:34 PM", 46.81062, -92.08194, 18, "SW")]
+
+def get_GPS_location():
+  c.value = c.value + 1
+  if(c.value == 20):
+	  c.value = 0
+
+  return gpsDataArray[c.value]
+
+#end of GPS definition
+
 #some MPU6050 Registers and their Address
 PWR_MGMT_1   = 0x6B
 SMPLRT_DIV   = 0x19
@@ -78,15 +126,24 @@ Zi = 0
 Xp = float(sys.argv[1])
 Yp = float(sys.argv[2])
 Zp = float(sys.argv[3])
+deleyToWait = float(sys.argv[4])
+timeRangeForGPS = float(sys.argv[5])
 #package pattern position
 
-sleep(10)
+sleep(deleyToWait)
 #wait to setup the initial package position
 
 firstime = True
+counter = 0
 
 while True:
-	
+	#GPS section
+	if((counter / 60) >= timeRangeForGPS):
+		location = get_GPS_location()
+		message = "Time: " + location.date + "| Latitude: ", location.latitude, "| Longtitude: " ,location.longitude, "| Speed: ", location.speed, "| Heading: ", location.heading
+		send_sms( message )
+		counter = 0
+
 	#Read Accelerometer raw value
 	acc_x = read_raw_data(ACCEL_XOUT_H)
 	acc_y = read_raw_data(ACCEL_YOUT_H)
